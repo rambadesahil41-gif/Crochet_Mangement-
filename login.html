@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crochet Login</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Poppins',sans-serif;
+}
+
+body{
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+  background:linear-gradient(-45deg,#ff1493,#ff69b4,#ff9a9e,#fad0c4);
+  background-size:400% 400%;
+  animation:gradientBG 12s ease infinite;
+}
+
+@keyframes gradientBG{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+
+.login-container{
+  backdrop-filter:blur(20px);
+  background:rgba(255,255,255,0.18);
+  padding:45px 35px;
+  border-radius:25px;
+  width:100%;
+  max-width:380px;
+  text-align:center;
+  box-shadow:0 15px 40px rgba(0,0,0,0.25);
+  animation:fadeIn 1s ease;
+  transition:0.3s;
+}
+
+.login-container:hover{
+  transform:translateY(-5px);
+}
+
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(-30px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+.login-container h2{
+  color:white;
+  margin-bottom:25px;
+  font-weight:600;
+  letter-spacing:1px;
+  font-size:24px;
+}
+
+/* Input Wrapper */
+.input-box{
+  position:relative;
+  width:100%;
+}
+
+input{
+  width:100%;
+  padding:14px;
+  margin:12px 0;
+  border-radius:12px;
+  border:none;
+  outline:none;
+  font-size:15px;
+  transition:0.3s;
+}
+
+input:focus{
+  box-shadow:0 0 12px #ff1493;
+  transform:scale(1.02);
+}
+
+/* Eye Icon */
+.toggle-password{
+  position:absolute;
+  right:15px;
+  top:50%;
+  transform:translateY(-50%);
+  cursor:pointer;
+  font-size:14px;
+  color:#555;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  margin-top:15px;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(45deg,#ff1493,#ff69b4);
+  color:white;
+  font-size:16px;
+  font-weight:500;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+  transform:scale(1.05);
+  box-shadow:0 8px 25px rgba(0,0,0,0.4);
+}
+
+.error{
+  color:#fff200;
+  margin-top:12px;
+  font-size:14px;
+  font-weight:500;
+}
+
+/* Mobile Optimization */
+@media (max-width:480px){
+
+  .login-container{
+    padding:35px 25px;
+    border-radius:20px;
+  }
+
+  .login-container h2{
+    font-size:20px;
+  }
+
+  input{
+    font-size:14px;
+    padding:12px;
+  }
+
+  button{
+    font-size:15px;
+    padding:12px;
+  }
+
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="login-container">
+  <h2>Welcome Boss 👑</h2>
+
+  <div class="input-box">
+    <input type="password" id="secretCode" placeholder="Enter Secret Code">
+    <span class="toggle-password" onclick="togglePassword()">Show</span>
+  </div>
+
+  <button onclick="checkLogin()">Login</button>
+
+  <p id="error" class="error"></p>
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "crochet-management.firebaseapp.com",
+  projectId: "crochet-management",
+  storageBucket: "crochet-management.firebasestorage.app",
+  messagingSenderId: "820080156149",
+  appId: "1:820080156149:web:2816afacd6f8d70b8f54bc"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+async function checkLogin(){
+
+  let enteredCode = document.getElementById("secretCode").value;
+  let error = document.getElementById("error");
+
+  if(enteredCode === ""){
+    error.innerText="⚠ Please enter secret code!";
+    return;
+  }
+
+  try{
+
+    const docRef = doc(db, "settings", "admin");
+    const docSnap = await getDoc(docRef);
+
+    if(docSnap.exists()){
+
+      const savedCode = docSnap.data().secretCode;
+
+      if(enteredCode === savedCode){
+
+        sessionStorage.setItem("isLoggedIn","true");
+        window.location.href="index.html";
+
+      } else {
+        error.innerText="❌ Wrong Secret Code!";
+      }
+
+    } else {
+      error.innerText="⚠ Secret code not found!";
+    }
+
+  } catch(e){
+    error.innerText="⚠ Error connecting to database";
+  }
+
+}
+
+window.checkLogin = checkLogin;
+
+function togglePassword(){
+  const input = document.getElementById("secretCode");
+  const toggle = document.querySelector(".toggle-password");
+
+  if(input.type === "password"){
+    input.type = "text";
+    toggle.innerText = "Hide";
+  } else {
+    input.type = "password";
+    toggle.innerText = "Show";
+  }
+}
+
+window.togglePassword = togglePassword;
+
+// Already logged in
+if(sessionStorage.getItem("isLoggedIn")==="true"){
+  window.location.href="index.html";
+}
+
+</script>
+
+</body>
+</html>
